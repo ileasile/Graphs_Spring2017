@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bridges1", "Bridges1\Bridges1.vcxproj", "{0D10B8C5-D049-4DA2-B2E1-C7641CF35804}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTest", "UnitTest\UnitTest.vcxproj", "{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -23,14 +21,6 @@ Global
 		{0D10B8C5-D049-4DA2-B2E1-C7641CF35804}.Release|x64.Build.0 = Release|x64
 		{0D10B8C5-D049-4DA2-B2E1-C7641CF35804}.Release|x86.ActiveCfg = Release|Win32
 		{0D10B8C5-D049-4DA2-B2E1-C7641CF35804}.Release|x86.Build.0 = Release|Win32
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Debug|x64.ActiveCfg = Debug|x64
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Debug|x64.Build.0 = Debug|x64
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Debug|x86.ActiveCfg = Debug|Win32
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Debug|x86.Build.0 = Debug|Win32
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Release|x64.ActiveCfg = Release|x64
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Release|x64.Build.0 = Release|x64
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Release|x86.ActiveCfg = Release|Win32
-		{7EBAE043-1FA8-4146-9568-0EC069D4FDF8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

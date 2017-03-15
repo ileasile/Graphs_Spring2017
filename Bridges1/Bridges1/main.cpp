@@ -1,11 +1,16 @@
-#define _CRT_SECURE_NO_WARNINGS
+#ifdef ILEASILE_D
+#include "C:\Google Disc\Graphs\Bridges1\UnitTest\stdafx.h"
+#endif // ILEASILE_D
 
+#ifndef ILEASILE_D
+#define _CRT_SECURE_NO_WARNINGS
 #include <algorithm>
 #include <iostream>
 #include <vector>
 #include <ctime>
 #include <set>
 #include <map>
+#endif
 
 using namespace std;
 vector<vector<int>> g;
@@ -18,11 +23,11 @@ vector<pair<int, int>> br;
 
 int skip_from;
 int skip_to;
-void erase_edge(int from, int to) {
+inline void erase_edge(int from, int to) {
 	skip_from = from;
 	skip_to = to;
 }
-bool is_erased(int from, int to) {
+inline bool is_erased(int from, int to) {
 	return 
 		(from == skip_from) && (to == skip_to) ||
 		(from == skip_to) && (to == skip_from);
@@ -55,10 +60,6 @@ void search_bridges() {
 	timer = 0;
 	br.clear();
 	dfs_bridge(-1, 0);
-	/*for (int v = 0; v < N; ++v) {
-		if (!used[v])
-			dfs_bridge(-1, v);
-	}*/
 }
 
 int main() {
@@ -75,9 +76,7 @@ int main() {
 		cin >> m;
 		g[i].resize(m);
 		for (int j = 0; j < m; ++j) {
-			int to;
-			cin >> to;
-			g[i][j] = to;
+			cin >> g[i][j];
 		}
 	}
 
@@ -86,14 +85,20 @@ int main() {
 			erase_edge(u, v);
 			search_bridges();
 			for (auto b: br){
-				map<int, int> s({ {u,0}, {v,0}, {b.first,0 }, {b.second, 0} });
+				
+				/*map<int, int> s({ {u,0}, {v,0}, {b.first,0 }, {b.second, 0} });
 				++s[u];	++s[v];	++s[b.first]; ++s[b.second];
 				for (auto si : s) {
 					if (g[si.first].size() - si.second <= 0) {
 						goto skip;
 					}
-				}
-
+				}*/
+				
+				if (g[u].size() <= 1 || g[v].size() <= 1 ||
+					g[b.first].size() <= 1 || g[b.second].size() <=1 ||
+					(u == b.first || u == b.second) && g[u].size() <= 2 ||
+					(v == b.first || v == b.second) && g[v].size() <= 2)
+					goto skip;
 				cout << u << " " << v << "\n";
 				cout << b.first << " " << b.second << "\n";
 				goto end;
