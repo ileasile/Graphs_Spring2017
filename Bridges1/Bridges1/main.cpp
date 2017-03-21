@@ -10,53 +10,91 @@
 #include <ctime>
 #include <set>
 #include <map>
+#include <stack>
 #endif
 
 using namespace std;
-vector<vector<int>> g;
-bool used[2000];
-int f[2000];
-int tin[2000];
+vector<int> g [151];
+int f[151];
+int tin[151];
+int ind[151];
 int timer = 0;
 int N;
 vector<pair<int, int>> br;
 
+template<class T>
+struct STACK {
+	T data[200];
+	T *ptr;
+	STACK() :ptr(data) {}
+	inline T top() {
+		return *(ptr - 1);
+	}
+	inline void pop() {
+		--ptr;
+	}
+	inline bool empty() {
+		return ptr == data;
+	}
+	inline void push(T v) {
+		*ptr = v;
+		++ptr;
+	}
+};
+
 int skip_from;
 int skip_to;
-inline void erase_edge(int from, int to) {
-	skip_from = from;
-	skip_to = to;
-}
-inline bool is_erased(int from, int to) {
-	return 
-		(from == skip_from) && (to == skip_to) ||
-		(from == skip_to) && (to == skip_from);
-}
 
-void dfs_bridge(int p, int v) {
-	f[v] = tin[v] = ++timer;
-	used[v] = true;
-	for (auto u : g[v]) {
-		if (is_erased(u, v))
-			continue;
-		if (u == p)
-			continue;
-		else if (!used[u]) {
-			dfs_bridge(v, u);
+void dfs_bridge(int _p, int _v) {
+	STACK<pair<int,int>> ST;
+	f[_v] = tin[_v] = ++timer;
+	ST.push(make_pair(_v,-2));
+
+	while (!ST.empty()){
+		int u, v, p;
+		tie(v, p) = ST.top();
+		if (ind[v] != -1) {
+			u = g[v][ind[v]];
 			f[v] = min(f[v], f[u]);
-			if (f[u] > tin[v])
+			if (f[u] > tin[v]) {
 				br.emplace_back(u, v);
+			}
 		}
-		else {
-			f[v] = min(f[v], tin[u]);
+		while (1) {
+			++ind[v];
+			if (ind[v] != g[v].size()) {
+				u = g[v][ind[v]];
+				while (
+					(u == p || (u == skip_from) && (v == skip_to) ||
+					(v == skip_to) && (u == skip_from)))
+				{
+					++ind[v];
+					if (ind[v] == g[v].size())
+						break;
+					u = g[v][ind[v]];
+				}
+			}
+			if (ind[v] == g[v].size()) {	
+				ST.pop();
+				break;
+			}
+			else if (tin[u] == -1) {
+				f[u] = tin[u] = ++timer;
+				ST.push(make_pair(u,v));
+				break;
+			}
+			else {
+				f[v] = min(f[v], tin[u]);
+			}
 		}
+		
 	}
 }
 
 void search_bridges() {
-	fill(used, used + N, false);
-	fill(f, f + N, -1);
-	fill(tin, tin + N, -1);
+	for (int i = 0; i < N; ++i) {
+		f[i] = tin[i] = ind[i] = -1;
+	}
 	timer = 0;
 	br.clear();
 	dfs_bridge(-1, 0);
@@ -69,8 +107,6 @@ int main() {
 	clock_t start = clock();
 #endif
 	cin >> N;
-	g.resize(N);
-
 	for (int i = 0; i < N; ++i) {
 		int m;
 		cin >> m;
@@ -82,37 +118,29 @@ int main() {
 
 	for (int v = 0; v < N; ++v) {
 		for (auto u : g[v]) {
-			erase_edge(u, v);
+			skip_from = v;
+			skip_to = u;
 			search_bridges();
-			for (auto b: br){
-				
-				/*map<int, int> s({ {u,0}, {v,0}, {b.first,0 }, {b.second, 0} });
-				++s[u];	++s[v];	++s[b.first]; ++s[b.second];
-				for (auto si : s) {
-					if (g[si.first].size() - si.second <= 0) {
-						goto skip;
-					}
-				}*/
-				
+			for (auto b: br){				
 				if (g[u].size() <= 1 || g[v].size() <= 1 ||
-					g[b.first].size() <= 1 || g[b.second].size() <=1 ||
+					g[b.first].size() <= 1 || g[b.second].size() <= 1 ||
 					(u == b.first || u == b.second) && g[u].size() <= 2 ||
-					(v == b.first || v == b.second) && g[v].size() <= 2)
-					goto skip;
-				cout << u << " " << v << "\n";
-				cout << b.first << " " << b.second << "\n";
-				goto end;
-			skip:;
+					(v == b.first || v == b.second) && g[v].size() <= 2);
+				else {
+					cout << u << " " << v << "\n";
+					cout << b.first << " " << b.second << "\n";
+#ifdef ILEASILE
+					clock_t finish = clock();
+					cout << "\n\n=============\n" << (finish - start) / (double)CLOCKS_PER_SEC;
+					fclose(stdin);
+					fclose(stdout);
+#endif
+					return 0;
+				}
 			}
 		}
 	}
 
-	end:
-#ifdef ILEASILE
-	clock_t finish = clock();
-	cout << "\n\n=============\n" << (finish - start) / (double)CLOCKS_PER_SEC;
-	fclose(stdin);
-	fclose(stdout);
-#endif
+
 	return 0;
 }
