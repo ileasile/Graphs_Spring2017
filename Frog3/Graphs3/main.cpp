@@ -8,12 +8,12 @@
 #include <cstdlib>
 using namespace std;
 
-const short MAXN = 1000;
+const short MAXN = 1024;
 short N;
-FILE *in, *out;
 
 float p[MAXN][MAXN];
-short b[MAXN][MAXN];
+float prob[MAXN];
+short b[MAXN];
 bool used[MAXN];
 short num[MAXN];
 short cnt;
@@ -40,64 +40,68 @@ void topo_sort() {
 	}
 }
 
-short count(short i, short j) {
-	if (b[i][j] == -1)
-		return 2;
-	else
-		return count(i, b[i][j]) + count(b[i][j], j)  - 1;
+short count() {
+	short cnt = 0;
+	short i = 0;
+	while (i != N - 1) {
+		++cnt;
+		i = b[i];
+	}
+	return cnt + 1;
 }
 
-void print_route(short i, short j) {
-	if(b[i][j] != -1){
-		print_route(i, b[i][j]);
-		fprintf(out, "%hd ", b[i][j]);
-		print_route(b[i][j], j);
+void print_route() {
+	short i = 0;
+	while (i != N - 1) {
+		printf("%hd ", i);
+		i = b[i];
 	}
+	printf("%hd ", i);
 }
 
 void task() {
-	fscanf(in, "%hd", &N);
+	scanf("%hd", &N);
 	for (short i = 0; i < N; ++i) {
 		for(short j = 0; j < N; ++j){
-			fscanf(in, "%f", p[i] + j);
-			b[i][j] = -1;
+			scanf("%f", p[i] + j);
 		}
+		b[i] = -1;
 	}
 	topo_sort();
 
-	for (short i = 0; i < N; ++i) {
+	short i = N - 1;
+	for (; num[i] != N - 1; --i);
+	short fin = i;
+	prob[num[i]] = 1;
+
+	for (--i; i >= 0; --i) {
 		auto ni = num[i];
-		for (short k = i + 1; k < N; ++k) {
-			auto nk = num[k];
-			for (short j = k + 1; j < N; ++j) {
-				auto nj = num[j];
-				auto mlt = p[ni][nk] * p[nk][nj];
-				auto & pij = p[ni][nj];
-				if (pij < mlt) {
-					pij = mlt;
-					b[ni][nj] = nk;
-				}
+		auto & pni = prob[ni] = 0;
+		for (short j = i + 1; j <= fin; ++j) {
+			auto nj = num[j];
+			auto mlt = p[ni][nj] * prob[nj];
+			if (pni < mlt) {
+				pni = mlt;
+				b[ni] = nj;
 			}
 		}
 	}
 
-	fprintf(out, "%f %hd\n", p[0][N - 1], count(0, N - 1));
-	fprintf(out, "%hd ", 0);
-	print_route(0, N - 1);
-	fprintf(out, "%hd ", N - 1);
+	printf("%f %hd\n", prob[0], count());
+	print_route();
 }
 
 int main() {
 #ifdef ILEASILE
 	auto timer = clock();
 #endif // ILEASILE
-	in = fopen("input.txt", "r");
-	out = fopen("output.txt", "w");
+	freopen("input.txt", "r", stdin);
+	freopen("output.txt", "w", stdout);
 	task();
 #ifdef ILEASILE
-	fprintf(out, "\n\n ===============\n%f", (clock() - timer) / (double)CLOCKS_PER_SEC);
+	printf("\n\n===============\n%f", (clock() - timer) / (double)CLOCKS_PER_SEC);
 #endif // ILEASILE
-	fclose(in);
-	fclose(out);
+	fclose(stdin);
+	fclose(stdout);
 	return 0;
 }
