@@ -44,20 +44,16 @@ public:
 	}
 
 	void unions(int a, int b) {
-		a = find(a);
-		b = find(b);
-		if (a != b) {
-			if (rank[a] < rank[b])
-				swap(a, b);
-			parent[b] = a;
-			if (rank[a] == rank[b])
-				++rank[a];
-		}
+		if (rank[a] < rank[b])
+			swap(a, b);
+		parent[b] = a;
+		if (rank[a] == rank[b])
+			++rank[a];
 	}
 };
 
 void task() {
-	long long answer = 0;
+	int answer = 0;
 
 	//input
 	int H, V;
@@ -110,8 +106,10 @@ void task() {
 	for (auto & ed : edges) {
 		int w, i, j;
 		tie(w, i, j) = ed;
+		i = su.find(i);
+		j = su.find(j);
 
-		if (su.find(i) == su.find(j)) {
+		if (i == j) {
 			if (w == 0) {
 				printf("%d", -1);
 				return;
@@ -123,7 +121,7 @@ void task() {
 		}
 	}
 
-	printf("%lld", answer);
+	printf("%d", answer);
 }
 
 int main() {
