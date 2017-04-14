@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <stack>
 #include <ctime>
 #include <cstdlib>
 using namespace std;
@@ -18,10 +17,29 @@ bool used[MAXN];
 short num[MAXN];
 short cnt;
 
+template<class T, int SIZE>
+class Stack {
+	T data[SIZE];
+	T * ptr = data - 1;
+public:
+	inline void push(T && val) {
+		*(++ptr) = val;
+	}
+	inline bool empty() {
+		return ptr == data - 1;
+	}
+	inline T & top() {
+		return *ptr;
+	}
+	inline void pop() {
+		--ptr;
+	}
+};
+
 void topo_sort() {
 	cnt = N;
 	used[0] = true;
-	stack<pair<short, short>> st;
+	Stack<pair<short, short>, MAXN> st;
 	st.push(make_pair(0, 0));
 
 	while (!st.empty()) {
@@ -40,7 +58,7 @@ void topo_sort() {
 	}
 }
 
-short count() {
+short count_route() {
 	short cnt = 0;
 	short i = 0;
 	while (i != N - 1) {
@@ -87,7 +105,7 @@ void task() {
 		}
 	}
 
-	printf("%f %hd\n", prob[0], count());
+	printf("%f %hd\n", prob[0], count_route());
 	print_route();
 }
 
