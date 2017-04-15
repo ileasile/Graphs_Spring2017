@@ -12,8 +12,8 @@ using namespace std;
 //horisontal/vertical word structure
 struct W {
 	union {	int x, y; };
-	union {	int y1, x1; };
-	union {	int y2, x2;	};
+	union {	int x1, y1; };
+	union {	int x2, y2;	};
 	bool operator<(const W & other) const{
 		// or y < other.y for vertical word
 		return x < other.x;
@@ -52,37 +52,34 @@ public:
 	}
 };
 
-void task() {
-	int answer = 0;
+int H, V, answer, vertex_count;
+vector<W> h, v;
+vector<tuple<int, int, int>> edges;
 
-	//input
-	int H, V;
+void input_and_count_letters() {
+	answer = 0;
 	scanf("%d %d", &H, &V);
-	vector<W> h(H), v(V);
-	for (int i = 0; i < H; ++i) {
-		scanf("%d %d %d", &(h[i].x), &(h[i].y1), &(h[i].y2));
-		answer += h[i].y2 - h[i].y1 + 1;
+	h.resize(H);
+	v.resize(V);
+	for (auto & hi : h) {
+		scanf("%d %d %d", &(hi.x), &(hi.y1), &(hi.y2));
+		answer += hi.y2 - hi.y1 + 1;
 	}
-	for (int i = 0; i < V; ++i) {
-		scanf("%d %d %d", &(v[i].x1), &(v[i].x2), &(v[i].y));
-		answer += v[i].x2 - v[i].x1 + 1;
+	for (auto & vi : v) {
+		scanf("%d %d %d", &(vi.x1), &(vi.x2), &(vi.y));
+		answer += vi.x2 - vi.x1 + 1;
 	}
-	// answer == letters number (counting intersections)
+}
 
-	//sorting words
-	sort(h.begin(), h.end());
-	sort(v.begin(), v.end());
-
-	//building edges list
-	vector<tuple<int, int, int>> edges;
+void build_edges_list() {
 	vector<pair<int, int>> vlast(V, { -1, -1 });
-	int vertex_count = 0;
+	vertex_count = 0;
 	for (int i = 0; i < H; ++i) {
 		int was_int = -1;
 		for (int j = 0; j < V; ++j) {
 			//if concentration point
-			if ( h[i].y1 <= v[j].y && v[j].y <= h[i].y2 &&
-				 v[j].x1 <= h[i].x && h[i].x <= v[j].x2) {
+			if (h[i].y1 <= v[j].y && v[j].y <= h[i].y2 &&
+				v[j].x1 <= h[i].x && h[i].x <= v[j].x2) {
 
 				if (was_int != -1)
 					edges.emplace_back(v[j].y - was_int - 1, vertex_count - 1, vertex_count);
@@ -94,14 +91,10 @@ void task() {
 			}
 		}
 	}
-
-	//substract intersections
 	answer -= vertex_count;
+}
 
-	//edges list sorting
-	sort(edges.begin(), edges.end());
-
-	//Kraskal algorithm
+void Kruskal_and_print_answer() {
 	DSU su(vertex_count);
 	for (auto & ed : edges) {
 		int w, i, j;
@@ -111,7 +104,7 @@ void task() {
 
 		if (i == j) {
 			if (w == 0) {
-				printf("%d", -1);
+				printf("-1");
 				return;
 			}
 			answer -= w;
@@ -122,6 +115,15 @@ void task() {
 	}
 
 	printf("%d", answer);
+}
+
+void task() {
+	input_and_count_letters();
+	sort(h.begin(), h.end());
+	sort(v.begin(), v.end());
+	build_edges_list();
+	sort(edges.begin(), edges.end());
+	Kruskal_and_print_answer();
 }
 
 int main() {
