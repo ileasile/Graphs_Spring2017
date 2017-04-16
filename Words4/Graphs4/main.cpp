@@ -22,11 +22,9 @@ struct W {
 
 class DSU {
 	vector<int> parent;
-	vector<int> rank;
 public:
 	DSU(int size) {
 		parent.resize(size);
-		rank.resize(size, 0);
 		for (int i = 0; i < size; ++i) {
 			parent[i] = i;
 		}
@@ -34,7 +32,6 @@ public:
 
 	~DSU() {
 		parent.clear();
-		rank.clear();
 	}
 
 	int find(int v) {
@@ -44,11 +41,7 @@ public:
 	}
 
 	void unions(int a, int b) {
-		if (rank[a] < rank[b])
-			swap(a, b);
 		parent[b] = a;
-		if (rank[a] == rank[b])
-			++rank[a];
 	}
 };
 
@@ -120,9 +113,12 @@ void Kruskal_and_print_answer() {
 
 void task() {
 	input_and_count_letters();
+
 	sort(h.begin(), h.end());
 	sort(v.begin(), v.end());
 	build_edges_list();
+	h.clear(); v.clear();
+
 	sort(edges.begin(), edges.end());
 	Kruskal_and_print_answer();
 }
