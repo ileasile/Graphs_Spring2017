@@ -75,12 +75,13 @@ void build_edges_list() {
 	vector<pair<int, int>> vlast(V, { -1, -1 });
 	vertex_count = 0;
 	for (int i = 0; i < H; ++i) {
-		int was_int = -1;
-		for (int j = 0; j < V; ++j) {
-			//if concentration point
-			if (h[i].y1 <= v[j].y && v[j].y <= h[i].y2 &&
-				v[j].x1 <= h[i].x && h[i].x <= v[j].x2) {
+		int j = 0;
+		for (; j < V && v[j].y < h[i].y1; ++j);
 
+		int was_int = -1;
+		for (; j < V && v[j].y <= h[i].y2; ++j) {
+			//if concentration point
+			if (v[j].x1 <= h[i].x && h[i].x <= v[j].x2) {
 				if (was_int != -1)
 					edges.emplace_back(v[j].y - was_int - 1, vertex_count - 1, vertex_count);
 				if (vlast[j].first != -1)
