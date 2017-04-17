@@ -65,21 +65,31 @@ void input_and_count_letters() {
 }
 
 void build_edges_list() {
-	vector<pair<int, int>> vlast(V, { -1, -1 });
+	vector<tuple<int, int, bool>> vlast(V, make_tuple( -1, -1,  false ));
+	edges.reserve(2000000);
 	vertex_count = 0;
-	for (int i = 0; i < H; ++i) {
+	for (auto & hi : h) {
 		int j = 0;
-		for (; j < V && v[j].y < h[i].y1; ++j);
+		for (; j < V && v[j].y < hi.y1; ++j);
 
 		int was_int = -1;
-		for (; j < V && v[j].y <= h[i].y2; ++j) {
+		for (; j < V && v[j].y <= hi.y2; ++j) {
 			//if concentration point
-			if (v[j].x1 <= h[i].x && h[i].x <= v[j].x2) {
-				if (was_int != -1)
-					edges.emplace_back(v[j].y - was_int - 1, vertex_count - 1, vertex_count);
-				if (vlast[j].first != -1)
-					edges.emplace_back(h[i].x - vlast[j].second - 1, vlast[j].first, vertex_count);
-				vlast[j] = make_pair(vertex_count, h[i].x);
+			if (v[j].x1 <= hi.x && hi.x <= v[j].x2) {
+				int w1 = -1, w2 = -1;
+				if (was_int != -1) {
+					w1 = v[j].y - was_int - 1;
+					edges.emplace_back(w1, vertex_count - 1, vertex_count);
+				}
+				if (get<0>(vlast[j]) != -1) {
+					w2 = hi.x - get<1>(vlast[j]) - 1;
+					edges.emplace_back(w2, get<0>(vlast[j]), vertex_count);
+				}
+				if (w1 == 0 && w2 == 0 && get<2>(vlast[j])) {
+					printf("-1");
+					throw 1;
+				}
+				vlast[j] = make_tuple(vertex_count, hi.x, w2 == 0);
 				was_int = v[j].y;
 				++vertex_count;
 			}
@@ -90,21 +100,29 @@ void build_edges_list() {
 
 void Kruskal_and_print_answer() {
 	DSU su(vertex_count);
-	for (auto & ed : edges) {
-		int w, i, j;
-		tie(w, i, j) = ed;
-		i = su.find(i);
-		j = su.find(j);
+	auto ed = edges.begin();
+	for (; ed != edges.end() && get<0>(*ed) == 0; ++ed) {
+		get<1>(*ed) = su.find(get<1>(*ed));
+		get<2>(*ed) = su.find(get<2>(*ed));
 
-		if (i == j) {
-			if (w == 0) {
-				printf("-1");
-				return;
-			}
-			answer -= w;
+		if (get<1>(*ed) == get<2>(*ed)) {
+			printf("-1");
+			return;
 		}
 		else {
-			su.unions(i, j);
+			su.unions(get<1>(*ed), get<2>(*ed));
+		}
+	}
+
+	for (; ed != edges.end(); ++ed) {
+		get<1>(*ed) = su.find(get<1>(*ed));
+		get<2>(*ed) = su.find(get<2>(*ed));
+
+		if (get<1>(*ed) == get<2>(*ed)) {
+			answer -= get<0>(*ed);
+		}
+		else {
+			su.unions(get<1>(*ed), get<2>(*ed));
 		}
 	}
 
@@ -116,7 +134,12 @@ void task() {
 
 	sort(h.begin(), h.end());
 	sort(v.begin(), v.end());
-	build_edges_list();
+	try {
+		build_edges_list();
+	}
+	catch (int){
+		return;
+	}
 	h.clear(); v.clear();
 
 	sort(edges.begin(), edges.end());
