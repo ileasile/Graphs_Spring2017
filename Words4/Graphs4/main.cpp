@@ -14,9 +14,16 @@ struct W {
 	union {	int x, y; };
 	union {	int x1, y1; };
 	union {	int x2, y2;	};
-	bool operator<(const W & other) const{
+	inline bool operator<(const W & other) const{
 		// or y < other.y for vertical word
 		return x < other.x;
+	}
+};
+
+struct E {
+	int w, v, u;
+	inline bool operator<(const E & other) const {
+		return w < other.w;
 	}
 };
 
@@ -46,27 +53,29 @@ public:
 };
 
 int H, V, answer, vertex_count;
-vector<W> h, v;
-vector<tuple<int, int, int>> edges;
+const int MAX_SIDE = 1000;
+W h[MAX_SIDE];
+W v[MAX_SIDE];
+E edges[2 * MAX_SIDE * MAX_SIDE];
+int edges_count = -1;
 
 void input_and_count_letters() {
 	answer = 0;
 	scanf("%d %d", &H, &V);
-	h.resize(H);
-	v.resize(V);
-	for (auto & hi : h) {
-		scanf("%d %d %d", &(hi.x), &(hi.y1), &(hi.y2));
-		answer += hi.y2 - hi.y1 + 1;
+	for (int i = 0; i < H; ++i) {
+		scanf("%d %d %d", &(h[i].x), &(h[i].y1), &(h[i].y2));
+		answer += h[i].y2 - h[i].y1 + 1;
 	}
-	for (auto & vi : v) {
-		scanf("%d %d %d", &(vi.x1), &(vi.x2), &(vi.y));
-		answer += vi.x2 - vi.x1 + 1;
+	for (int i = 0; i < V; ++i) {
+		scanf("%d %d %d", &(v[i].x1), &(v[i].x2), &(v[i].y));
+		answer += v[i].x2 - v[i].x1 + 1;
 	}
 }
 
 void build_edges_list() {
-	vector<tuple<int, int, bool>> vlast(V, make_tuple( -1, -1,  false ));
-	edges.reserve(2000000);
+	tuple<int, int> vlast[MAX_SIDE];
+	fill(vlast , vlast + V, make_tuple(-1, -1));
+	
 	vertex_count = 0;
 	for (auto & hi : h) {
 		int j = 0;
@@ -76,53 +85,46 @@ void build_edges_list() {
 		for (; j < V && v[j].y <= hi.y2; ++j) {
 			//if concentration point
 			if (v[j].x1 <= hi.x && hi.x <= v[j].x2) {
-				int w1 = -1, w2 = -1;
-				if (was_int != -1) {
-					w1 = v[j].y - was_int - 1;
-					edges.emplace_back(w1, vertex_count - 1, vertex_count);
-				}
-				if (get<0>(vlast[j]) != -1) {
-					w2 = hi.x - get<1>(vlast[j]) - 1;
-					edges.emplace_back(w2, get<0>(vlast[j]), vertex_count);
-				}
-				if (w1 == 0 && w2 == 0 && get<2>(vlast[j])) {
-					printf("-1");
-					throw 1;
-				}
-				vlast[j] = make_tuple(vertex_count, hi.x, w2 == 0);
+				if (was_int != -1)
+					edges[++edges_count] = { v[j].y - was_int - 1, vertex_count - 1, vertex_count };
+				if (get<0>(vlast[j]) != -1)
+					edges[++edges_count] = { hi.x - get<1>(vlast[j]) - 1, get<0>(vlast[j]), vertex_count };
+				vlast[j] = make_tuple(vertex_count, hi.x);
 				was_int = v[j].y;
 				++vertex_count;
 			}
 		}
 	}
+	++edges_count;
 	answer -= vertex_count;
 }
 
 void Kruskal_and_print_answer() {
 	DSU su(vertex_count);
-	auto ed = edges.begin();
-	for (; ed != edges.end() && get<0>(*ed) == 0; ++ed) {
-		get<1>(*ed) = su.find(get<1>(*ed));
-		get<2>(*ed) = su.find(get<2>(*ed));
+	auto ed = edges;
+	auto ede = edges + edges_count;
+	for (; ed != ede && ed->w == 0; ++ed) {
+		ed->v = su.find(ed->v);
+		ed->u = su.find(ed->u);
 
-		if (get<1>(*ed) == get<2>(*ed)) {
+		if (ed->v == ed->u) {
 			printf("-1");
 			return;
 		}
 		else {
-			su.unions(get<1>(*ed), get<2>(*ed));
+			su.unions(ed->v, ed->u);
 		}
 	}
 
-	for (; ed != edges.end(); ++ed) {
-		get<1>(*ed) = su.find(get<1>(*ed));
-		get<2>(*ed) = su.find(get<2>(*ed));
+	for (; ed != ede; ++ed) {
+		ed->v = su.find(ed->v);
+		ed->u = su.find(ed->u);
 
-		if (get<1>(*ed) == get<2>(*ed)) {
-			answer -= get<0>(*ed);
+		if (ed->v == ed->u) {
+			answer -= ed->w;
 		}
 		else {
-			su.unions(get<1>(*ed), get<2>(*ed));
+			su.unions(ed->v, ed->u);
 		}
 	}
 
@@ -132,17 +134,11 @@ void Kruskal_and_print_answer() {
 void task() {
 	input_and_count_letters();
 
-	sort(h.begin(), h.end());
-	sort(v.begin(), v.end());
-	try {
-		build_edges_list();
-	}
-	catch (int){
-		return;
-	}
-	h.clear(); v.clear();
+	sort(h, h + H);
+	sort(v, v + V);
+	build_edges_list();
 
-	sort(edges.begin(), edges.end());
+	sort(edges, edges + edges_count);
 	Kruskal_and_print_answer();
 }
 
