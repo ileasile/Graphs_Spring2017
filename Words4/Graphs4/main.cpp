@@ -9,26 +9,26 @@
 #include <algorithm>
 using namespace std;
 
-//horisontal/vertical word / edge structure
+//horisontal/vertical word structure
 struct W {
-	union {	int x, y, w; };
-	union {	int x1, y1, v; };
-	union {	int x2, y2, u;	};
+	union {	int x, y; };
+	union {	int x1, y1; };
+	union {	int x2, y2;	};
 	inline bool operator<(const W & other) const{
 		// or y < other.y for vertical word
-		// or w < other.w for edge
 		return x < other.x;
 	}
 };
 
 int H, V, answer, vertex_count;
 const int MAX_SIDE = 1000;
+const int MAX_WLEN = 1000001;
 const int MAX_EDGES = 2 * (MAX_SIDE - 1) * (MAX_SIDE - 1);
 W h[MAX_SIDE];
 W v[MAX_SIDE];
-W edges[MAX_EDGES];
-int edges_count = -1;
 int parent [MAX_SIDE * MAX_SIDE];
+vector <pair<int, int>> edges [MAX_WLEN + 1];
+
 
 struct DSU {
 	DSU(int size) {
@@ -76,27 +76,24 @@ void build_edges_list() {
 			//if concentration point
 			if (v[j].x1 <= hi.x && hi.x <= v[j].x2) {
 				if (was_int != -1)
-					edges[++edges_count] = { v[j].y - was_int - 1, vertex_count - 1, vertex_count };
+					edges[v[j].y - was_int - 1].push_back({vertex_count - 1, vertex_count });
 				if (get<0>(vlast[j]) != -1)
-					edges[++edges_count] = { hi.x - vlast[j].second - 1, vlast[j].first, vertex_count };
+					edges[hi.x - vlast[j].second - 1].push_back({  vlast[j].first, vertex_count });
 				vlast[j] = make_pair(vertex_count, hi.x);
 				was_int = v[j].y;
 				++vertex_count;
 			}
 		}
 	}
-	++edges_count;
 	answer -= vertex_count;
 }
 
 void Kruskal_and_print_answer() {
 	DSU su(vertex_count);
-	auto ed = edges;
-	auto ede = edges + edges_count;
 	int a, b;
-	for (; ed != ede && ed->w == 0; ++ed) {
-		a = su.find(ed->v);
-		b = su.find(ed->u);
+	for (auto & ed : edges[0]) {
+		a = su.find(ed.first);
+		b = su.find(ed.second);
 
 		if (a == b) {
 			printf("-1");
@@ -107,15 +104,17 @@ void Kruskal_and_print_answer() {
 		}
 	}
 
-	for (; ed != ede; ++ed) {
-		a = su.find(ed->v);
-		b = su.find(ed->u);
+	for (int w = 1; w < MAX_WLEN + 1; ++w) {
+		for (auto & ed : edges[w]) {
+			a = su.find(ed.first);
+			b = su.find(ed.second);
 
-		if (a == b) {
-			answer -= ed->w;
-		}
-		else {
-			su.unions(a, b);
+			if (a == b) {
+				answer -= w;
+			}
+			else {
+				su.unions(a, b);
+			}
 		}
 	}
 
@@ -129,7 +128,6 @@ void task() {
 	sort(v, v + V);
 	build_edges_list();
 
-	sort(edges, edges + edges_count);
 	Kruskal_and_print_answer();
 }
 
