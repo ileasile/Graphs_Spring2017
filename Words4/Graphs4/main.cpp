@@ -9,55 +9,46 @@
 #include <algorithm>
 using namespace std;
 
-//horisontal/vertical word structure
+//horisontal/vertical word / edge structure
 struct W {
-	union {	int x, y; };
-	union {	int x1, y1; };
-	union {	int x2, y2;	};
+	union {	int x, y, w; };
+	union {	int x1, y1, v; };
+	union {	int x2, y2, u;	};
 	inline bool operator<(const W & other) const{
 		// or y < other.y for vertical word
+		// or w < other.w for edge
 		return x < other.x;
-	}
-};
-
-struct E {
-	int w, v, u;
-	inline bool operator<(const E & other) const {
-		return w < other.w;
-	}
-};
-
-class DSU {
-	vector<int> parent;
-public:
-	DSU(int size) {
-		parent.resize(size);
-		for (int i = 0; i < size; ++i) {
-			parent[i] = i;
-		}
-	}
-
-	~DSU() {
-		parent.clear();
-	}
-
-	int find(int v) {
-		if (v == parent[v])
-			return v;
-		return parent[v] = find(parent[v]);
-	}
-
-	void unions(int a, int b) {
-		parent[b] = a;
 	}
 };
 
 int H, V, answer, vertex_count;
 const int MAX_SIDE = 1000;
+const int MAX_EDGES = 2 * (MAX_SIDE - 1) * (MAX_SIDE - 1);
 W h[MAX_SIDE];
 W v[MAX_SIDE];
-E edges[2 * MAX_SIDE * MAX_SIDE];
+W edges[MAX_EDGES];
 int edges_count = -1;
+int parent [MAX_SIDE * MAX_SIDE];
+
+struct DSU {
+	DSU(int size) {
+		for (int i = 0; i < size; ++i) {
+			parent[i] = i;
+		}
+	}
+
+	inline int find(int v) {
+		if (v == parent[v])
+			return v;
+		return parent[v] = find(parent[v]);
+	}
+
+	inline void unions(int a, int b) {
+		parent[b] = a;
+	}
+};
+
+
 
 void input_and_count_letters() {
 	answer = 0;
@@ -73,8 +64,8 @@ void input_and_count_letters() {
 }
 
 void build_edges_list() {
-	tuple<int, int> vlast[MAX_SIDE];
-	fill(vlast , vlast + V, make_tuple(-1, -1));
+	pair<int, int> vlast[MAX_SIDE];
+	fill(vlast , vlast + V, make_pair(-1, -1));
 	
 	vertex_count = 0;
 	for (auto & hi : h) {
@@ -88,8 +79,8 @@ void build_edges_list() {
 				if (was_int != -1)
 					edges[++edges_count] = { v[j].y - was_int - 1, vertex_count - 1, vertex_count };
 				if (get<0>(vlast[j]) != -1)
-					edges[++edges_count] = { hi.x - get<1>(vlast[j]) - 1, get<0>(vlast[j]), vertex_count };
-				vlast[j] = make_tuple(vertex_count, hi.x);
+					edges[++edges_count] = { hi.x - vlast[j].second - 1, vlast[j].first, vertex_count };
+				vlast[j] = make_pair(vertex_count, hi.x);
 				was_int = v[j].y;
 				++vertex_count;
 			}
@@ -103,28 +94,29 @@ void Kruskal_and_print_answer() {
 	DSU su(vertex_count);
 	auto ed = edges;
 	auto ede = edges + edges_count;
+	int a, b;
 	for (; ed != ede && ed->w == 0; ++ed) {
-		ed->v = su.find(ed->v);
-		ed->u = su.find(ed->u);
+		a = su.find(ed->v);
+		b = su.find(ed->u);
 
-		if (ed->v == ed->u) {
+		if (a == b) {
 			printf("-1");
 			return;
 		}
 		else {
-			su.unions(ed->v, ed->u);
+			su.unions(a, b);
 		}
 	}
 
 	for (; ed != ede; ++ed) {
-		ed->v = su.find(ed->v);
-		ed->u = su.find(ed->u);
+		a = su.find(ed->v);
+		b = su.find(ed->u);
 
-		if (ed->v == ed->u) {
+		if (a == b) {
 			answer -= ed->w;
 		}
 		else {
-			su.unions(ed->v, ed->u);
+			su.unions(a, b);
 		}
 	}
 
