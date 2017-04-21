@@ -48,19 +48,18 @@ struct DSU {
 	}
 };
 
-
-
 void input_and_count_letters() {
 	answer = 0;
 	scanf("%d %d", &H, &V);
 	for (int i = 0; i < H; ++i) {
 		scanf("%d %d %d", &(h[i].x), &(h[i].y1), &(h[i].y2));
-		answer += h[i].y2 - h[i].y1 + 1;
+		answer += h[i].y2 - h[i].y1;
 	}
 	for (int i = 0; i < V; ++i) {
 		scanf("%d %d %d", &(v[i].x1), &(v[i].x2), &(v[i].y));
-		answer += v[i].x2 - v[i].x1 + 1;
+		answer += v[i].x2 - v[i].x1;
 	}
+	answer += V + H;
 }
 
 void build_edges_list() {
