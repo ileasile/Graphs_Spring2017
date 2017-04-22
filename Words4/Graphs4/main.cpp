@@ -20,15 +20,14 @@ struct W {
 	}
 };
 
-int H, V, answer, vertex_count;
 const int MAX_SIDE = 1000;
 const int MAX_WLEN = 1000001;
-const int MAX_EDGES = 2 * (MAX_SIDE - 1) * (MAX_SIDE - 1);
+
+int H, V, answer, vertex_count;
 W h[MAX_SIDE];
 W v[MAX_SIDE];
 int parent [MAX_SIDE * MAX_SIDE];
 vector <pair<int, int>> edges [MAX_WLEN + 1];
-
 
 struct DSU {
 	DSU(int size) {
@@ -77,7 +76,7 @@ void build_edges_list() {
 			if (v[j].x1 <= hi.x && hi.x <= v[j].x2) {
 				if (was_int != -1)
 					edges[v[j].y - was_int - 1].push_back({vertex_count - 1, vertex_count });
-				if (get<0>(vlast[j]) != -1)
+				if (vlast[j].first != -1)
 					edges[hi.x - vlast[j].second - 1].push_back({  vlast[j].first, vertex_count });
 				vlast[j] = make_pair(vertex_count, hi.x);
 				was_int = v[j].y;
