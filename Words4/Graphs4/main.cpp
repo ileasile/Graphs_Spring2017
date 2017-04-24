@@ -3,6 +3,9 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <set>
+#include <unordered_map>
+#include <bitset>
 #include <ctime>
 #include <tuple>
 #include <cstdlib>
@@ -27,7 +30,10 @@ int H, V, answer, vertex_count;
 W h[MAX_SIDE];
 W v[MAX_SIDE];
 int parent [MAX_SIDE * MAX_SIDE];
-vector <pair<int, int>> edges [MAX_WLEN + 1];
+
+unordered_map<int, vector <pair<int, int>>> edges;
+vector<int> weights;
+bitset<MAX_WLEN + 1> wbs;
 
 struct DSU {
 	DSU(int size) {
@@ -74,16 +80,29 @@ void build_edges_list() {
 		for (; j < V && v[j].y <= hi.y2; ++j) {
 			//if concentration point
 			if (v[j].x1 <= hi.x && hi.x <= v[j].x2) {
-				if (was_int != -1)
-					edges[v[j].y - was_int - 1].push_back({vertex_count - 1, vertex_count });
-				if (vlast[j].first != -1)
-					edges[hi.x - vlast[j].second - 1].push_back({  vlast[j].first, vertex_count });
+				if (was_int != -1) {
+					int w = v[j].y - was_int - 1;
+					if (!wbs.test(w)) {
+						wbs.set(w);
+						weights.push_back(w);
+					}
+					edges[w].push_back({ vertex_count - 1, vertex_count });
+				}
+				if (vlast[j].first != -1) {
+					int w = hi.x - vlast[j].second - 1;
+					if (!wbs.test(w)) {
+						wbs.set(w);
+						weights.push_back(w);
+					}
+					edges[w].push_back({ vlast[j].first, vertex_count });
+				}
 				vlast[j] = make_pair(vertex_count, hi.x);
 				was_int = v[j].y;
 				++vertex_count;
 			}
 		}
 	}
+	sort(weights.begin(), weights.end());
 	answer -= vertex_count;
 }
 
@@ -103,7 +122,11 @@ void Kruskal_and_print_answer() {
 		}
 	}
 
-	for (int w = 1; w < MAX_WLEN + 1; ++w) {
+	auto wit = weights.begin();
+	if (wit != weights.end() && *wit == 0) ++wit;
+
+	for (; wit != weights.end(); ++wit) {
+		int w = *wit;
 		for (auto & ed : edges[w]) {
 			a = su.find(ed.first);
 			b = su.find(ed.second);
