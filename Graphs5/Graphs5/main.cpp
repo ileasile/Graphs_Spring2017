@@ -200,19 +200,20 @@ void dijkstra() {
 			continue;
 		used[v.num].insert(v.prev);
 		Ptd first_vec = vert[v.num] - vert[v.prev];
+		auto oldw = d[v.num][v.prev];
 		for (auto e : g[v.num]) {
 			if (used[e].find(v.num) != used[e].end())
 				continue;
 			Ptd second_vec = vert[e] - vert[v.num];
-			auto w = angle(first_vec, second_vec);
-
+			
 			auto it = d[e].find(v.num);
 			if (it == d[e].end()) {
 				it = d[e].insert(make_pair(v.num, INF)).first;
 			}
 
-			if (it->second > d[v.num][v.prev] + w) {
-				it->second = d[v.num][v.prev] + w;
+			auto w = angle(first_vec, second_vec) + oldw;
+			if (it->second > w) {
+				it->second = w;
 				q.push({ it->second, e, v.num });
 			}
 		}
