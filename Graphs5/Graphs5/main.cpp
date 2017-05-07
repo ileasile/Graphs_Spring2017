@@ -47,8 +47,8 @@ typedef P<double> Ptd;
 
 struct Seg {
 	Pt pt[2];
-	inline auto & operator[](int i) { return pt[i]; }
-	inline const auto & operator[](int i) const { return pt[i]; }
+	inline Pt & operator[](int i) { return pt[i]; }
+	inline const Pt & operator[](int i) const { return pt[i]; }
 	inline Pt get_vector()const {
 		return Pt{ pt[1].x - pt[0].x, pt[1].y - pt[0].y };
 	}
@@ -188,7 +188,7 @@ void dijkstra() {
 	priority_queue<Vertex> q;
 
 	// Dijkstra (modified)
-	d[stnum[0]][stnum[0]] = 0;
+	d[stnum[0]][0] = 0;
 	for (auto e : g[stnum[0]]) {
 		d[e][stnum[0]] = 0;
 		q.push({ 0, e, stnum[0] });
@@ -196,9 +196,8 @@ void dijkstra() {
 	while (!q.empty()) {
 		auto v = q.top();
 		q.pop();
-		if (used[v.num].find(v.prev) != used[v.num].end())
+		if (!used[v.num].insert(v.prev).second)
 			continue;
-		used[v.num].insert(v.prev);
 		Ptd first_vec = vert[v.num] - vert[v.prev];
 		auto oldw = d[v.num][v.prev];
 		for (auto e : g[v.num]) {
@@ -206,15 +205,11 @@ void dijkstra() {
 				continue;
 			Ptd second_vec = vert[e] - vert[v.num];
 
-			auto it = d[e].find(v.num);
-			if (it == d[e].end()) {
-				it = d[e].insert(make_pair(v.num, INF)).first;
-			}
-
+			auto it = d[e].insert(make_pair(v.num, INF)).first;
 			auto w = angle(first_vec, second_vec) + oldw;
 			if (it->second > w) {
 				it->second = w;
-				q.push({ it->second, e, v.num });
+				q.push({ w, e, v.num });
 			}
 		}
 	}
