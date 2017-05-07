@@ -24,7 +24,7 @@ struct P {
 	inline const double sqr_len()const {
 		return (double)x*x + (double)y*y;
 	}
-	
+
 	template<class _T>
 	inline bool operator==(const P<_T> & other) const {
 		return abs(x - other.x) < eps && abs(y - other.y) < eps;
@@ -47,17 +47,17 @@ typedef P<double> Ptd;
 
 struct Seg {
 	Pt pt[2];
-	inline auto & operator[](int i) {return pt[i];}
-	inline const auto & operator[](int i) const {return pt[i];}
+	inline auto & operator[](int i) { return pt[i]; }
+	inline const auto & operator[](int i) const { return pt[i]; }
 	inline Pt get_vector()const {
-		return Pt{pt[1].x - pt[0].x, pt[1].y - pt[0].y};
+		return Pt{ pt[1].x - pt[0].x, pt[1].y - pt[0].y };
 	}
 };
 
 struct Vertex {
 	double weight;
 	int num, prev;
-	inline bool operator < (const Vertex & other) const{
+	inline bool operator < (const Vertex & other) const {
 		return weight > other.weight;
 	}
 };
@@ -71,8 +71,8 @@ inline void get_eq(const Seg & s, int & a, int & b, int & c) {
 template <class T>
 inline bool seg_has_pt_proj(const Seg & s, P<T> & p) {
 	return	((s[0].x - eps <= p.x) && (p.x <= s[1].x + eps)) &&
-			(	(s[0].y - eps <= p.y) && (p.y <= s[1].y + eps) ||
-				(s[1].y - eps <= p.y) && (p.y <= s[0].y + eps) );
+		((s[0].y - eps <= p.y) && (p.y <= s[1].y + eps) ||
+		(s[1].y - eps <= p.y) && (p.y <= s[0].y + eps));
 }
 
 inline bool seg_intersect(const Seg & s0, const Seg & s1, Ptd & intersection) {
@@ -84,7 +84,7 @@ inline bool seg_intersect(const Seg & s0, const Seg & s1, Ptd & intersection) {
 		return false;
 	int d1 = b[0] * c[1] - b[1] * c[0];
 	int d2 = a[1] * c[0] - a[0] * c[1];
-	
+
 	double dd = d;
 
 	intersection.x = d1 / dd;
@@ -93,12 +93,12 @@ inline bool seg_intersect(const Seg & s0, const Seg & s1, Ptd & intersection) {
 }
 
 inline bool lies(const Seg & s, Pt & p) {
-	return seg_has_pt_proj(s, p) && 
-		( (p.x - s[0].x)*(s[1].y - s[0].y) == (p.y - s[0].y)*(s[1].x - s[0].x) );
+	return seg_has_pt_proj(s, p) &&
+		((p.x - s[0].x)*(s[1].y - s[0].y) == (p.y - s[0].y)*(s[1].x - s[0].x));
 }
 
 inline double angle(const Ptd & v0, const Ptd & v1) {
-	auto ac = (v0.x*v1.x + v0.y*v1.y)/sqrt(v0.sqr_len() * v1.sqr_len());
+	auto ac = (v0.x*v1.x + v0.y*v1.y) / sqrt(v0.sqr_len() * v1.sqr_len());
 	ac = (ac > 1) ? 1 : (ac < -1 ? -1 : ac);
 	return acos(ac);
 }
@@ -120,13 +120,13 @@ void input() {
 		if (e.pt[1] < e.pt[0])
 			swap(e.pt[1], e.pt[0]);
 	}
-	for(int i=0; i < 2; ++i)
+	for (int i = 0; i < 2; ++i)
 		scanf("%d %d", &(sti[i].x), &(sti[i].y));
 }
 
 void build_graph() {
 	map<Ptd, pair<int, vector<int>>> mp;
-	
+
 	vert_cnt = 0;
 	for (int i = 0; i < N; ++i) {
 		for (int j = i + 1; j < N; ++j) {
@@ -138,7 +138,7 @@ void build_graph() {
 						it->second.second.push_back(j);
 				}
 				else {
-					mp[isc] = { vert_cnt++, {i, j} };
+					mp[isc] = { vert_cnt++,{ i, j } };
 				}
 			}
 		}
@@ -157,7 +157,7 @@ void build_graph() {
 					break;
 				}
 			}
-			
+
 		}
 		else {
 			stnum[cntr] = it->second.first;
@@ -205,7 +205,7 @@ void dijkstra() {
 			if (used[e].find(v.num) != used[e].end())
 				continue;
 			Ptd second_vec = vert[e] - vert[v.num];
-			
+
 			auto it = d[e].find(v.num);
 			if (it == d[e].end()) {
 				it = d[e].insert(make_pair(v.num, INF)).first;
