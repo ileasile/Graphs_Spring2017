@@ -185,7 +185,6 @@ void dijkstra() {
 	//Dijkstra initialization
 	vector<map<int, double>> d(vert_cnt);
 	vector<set<int>> used(vert_cnt, set<int>());
-	vector<int> pred(vert_cnt);
 	priority_queue<Vertex> q;
 
 	// Dijkstra (modified)
