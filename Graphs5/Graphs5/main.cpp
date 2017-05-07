@@ -183,8 +183,8 @@ void build_graph() {
 
 void dijkstra() {
 	//Dijkstra initialization
-	vector<vector<double>> d(vert_cnt, vector<double>(vert_cnt, INF));
-	vector<vector<bool>> used(vert_cnt, vector<bool>(vert_cnt));
+	vector<map<int, double>> d(vert_cnt);
+	vector<set<int>> used(vert_cnt, set<int>());
 	vector<int> pred(vert_cnt);
 	priority_queue<Vertex> q;
 
@@ -197,22 +197,32 @@ void dijkstra() {
 	while (!q.empty()) {
 		auto v = q.top();
 		q.pop();
-		if (used[v.num][v.prev])
+		if (used[v.num].find(v.prev) != used[v.num].end())
 			continue;
-		used[v.num][v.prev] = 1;
+		used[v.num].insert(v.prev);
 		Ptd first_vec = vert[v.num] - vert[v.prev];
 		for (auto e : g[v.num]) {
-			if (used[e][v.num])
+			if (used[e].find(v.num) != used[e].end())
 				continue;
 			Ptd second_vec = vert[e] - vert[v.num];
 			auto w = angle(first_vec, second_vec);
-			if (d[e][v.num] > d[v.num][v.prev] + w) {
-				d[e][v.num] = d[v.num][v.prev] + w;
-				q.push({ d[e][v.num], e, v.num });
+
+			auto it = d[e].find(v.num);
+			if (it == d[e].end()) {
+				it = d[e].insert(make_pair(v.num, INF)).first;
+			}
+
+			if (it->second > d[v.num][v.prev] + w) {
+				it->second = d[v.num][v.prev] + w;
+				q.push({ it->second, e, v.num });
 			}
 		}
 	}
-	auto mn = *min_element(d[stnum[1]].begin(), d[stnum[1]].end());
+	double mn = INF;
+	for (auto el : d[stnum[1]]) {
+		if (mn > el.second)
+			mn = el.second;
+	}
 
 	if (mn == INF)
 		printf("-1");
