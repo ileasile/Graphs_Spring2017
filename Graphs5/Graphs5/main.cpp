@@ -7,8 +7,6 @@
 #include <set>
 #include <map>
 #include <queue>
-#include <unordered_map>
-#include <bitset>
 #include <ctime>
 #include <tuple>
 #include <cstdlib>
@@ -19,38 +17,60 @@ using namespace std;
 const double eps = 10e-4;
 
 template<class T>
-struct P {
+struct Point {
 	T x, y;
 	inline const double sqr_len()const {
 		return (double)x*x + (double)y*y;
 	}
 
 	template<class _T>
-	inline bool operator==(const P<_T> & other) const {
+	inline bool operator==(const Point<_T> & other) const {
 		return abs(x - other.x) < eps && abs(y - other.y) < eps;
 	}
 	template<class _T>
-	inline bool operator!=(const P<_T> & other) const {
+	inline bool operator!=(const Point<_T> & other) const {
 		return abs(x - other.x) >= eps || abs(y - other.y) >= eps;
 	}
 	template<class _T>
-	inline bool operator<(const P<_T> & other) const {
+	inline bool operator<(const Point<_T> & other) const {
 		return *this != other && (x < other.x || (x == other.x && y < other.y));
 	}
-	inline P<T> operator-(const P<T> & other) const {
-		return P<T>{x - other.x, y - other.y};
+	inline Point<T> operator-(const Point<T> & other) const {
+		return Point<T>{x - other.x, y - other.y};
 	}
 };
 
-typedef P<int> Pt;
-typedef P<double> Ptd;
+typedef Point<int> IntegerPoint;
+typedef Point<double> DoublePoint;
 
-struct Seg {
-	Pt pt[2];
-	inline Pt & operator[](int i) { return pt[i]; }
-	inline const Pt & operator[](int i) const { return pt[i]; }
-	inline Pt get_vector()const {
-		return Pt{ pt[1].x - pt[0].x, pt[1].y - pt[0].y };
+struct Line {
+	int a, b, c;
+};
+
+struct Segment {
+	IntegerPoint pt[2];
+	inline IntegerPoint & operator[](int i) { return pt[i]; }
+	inline const IntegerPoint & operator[](int i) const { return pt[i]; }
+	inline IntegerPoint get_vector()const {
+		return IntegerPoint{ pt[1].x - pt[0].x, pt[1].y - pt[0].y };
+	}
+
+	template <class T>
+	inline bool in_bounding_box(const Point<T> & p) const{
+		return	(((*this)[0].x - eps <= p.x) && (p.x <= (*this)[1].x + eps)) &&
+			(((*this)[0].y - eps <= p.y) && (p.y <= (*this)[1].y + eps) ||
+			((*this)[1].y - eps <= p.y) && (p.y <= (*this)[0].y + eps));
+	}
+
+	inline void get_eq(Line & l) const{
+		l.a = (*this)[1].y - (*this)[0].y;
+		l.b = (*this)[0].x - (*this)[1].x;
+		l.c = (*this)[1].x * (*this)[0].y - (*this)[0].x * (*this)[1].y;
+	}
+
+	inline bool lies(IntegerPoint & p) const{
+		return this->in_bounding_box(p) &&
+			((p.x - (*this)[0].x)*((*this)[1].y - (*this)[0].y) == (p.y - (*this)[0].y)*((*this)[1].x - (*this)[0].x));
 	}
 };
 
@@ -62,42 +82,25 @@ struct Vertex {
 	}
 };
 
-inline void get_eq(const Seg & s, int & a, int & b, int & c) {
-	a = s[1].y - s[0].y;
-	b = s[0].x - s[1].x;
-	c = s[1].x * s[0].y - s[0].x * s[1].y;
-}
 
-template <class T>
-inline bool seg_has_pt_proj(const Seg & s, P<T> & p) {
-	return	((s[0].x - eps <= p.x) && (p.x <= s[1].x + eps)) &&
-		((s[0].y - eps <= p.y) && (p.y <= s[1].y + eps) ||
-		(s[1].y - eps <= p.y) && (p.y <= s[0].y + eps));
-}
-
-inline bool seg_intersect(const Seg & s0, const Seg & s1, Ptd & intersection) {
-	int a[2], b[2], c[2];
-	get_eq(s0, a[0], b[0], c[0]);
-	get_eq(s1, a[1], b[1], c[1]);
-	int d = a[0] * b[1] - a[1] * b[0];
+inline bool seg_intersect(const Segment & s0, const Segment & s1, DoublePoint & intersection) {
+	Line l[2];
+	s0.get_eq(l[0]);
+	s1.get_eq(l[1]);
+	int d = l[0].a * l[1].b - l[1].a * l[0].b;
 	if (d == 0)
 		return false;
-	int d1 = b[0] * c[1] - b[1] * c[0];
-	int d2 = a[1] * c[0] - a[0] * c[1];
+	int d1 = l[0].b * l[1].c - l[1].b * l[0].c;
+	int d2 = l[1].a * l[0].c - l[0].a * l[1].c;
 
 	double dd = d;
 
 	intersection.x = d1 / dd;
 	intersection.y = d2 / dd;
-	return seg_has_pt_proj(s0, intersection) && seg_has_pt_proj(s1, intersection);
+	return s0.in_bounding_box(intersection) && s1.in_bounding_box(intersection);
 }
 
-inline bool lies(const Seg & s, Pt & p) {
-	return seg_has_pt_proj(s, p) &&
-		((p.x - s[0].x)*(s[1].y - s[0].y) == (p.y - s[0].y)*(s[1].x - s[0].x));
-}
-
-inline double angle(const Ptd & v0, const Ptd & v1) {
+inline double get_angle(const DoublePoint & v0, const DoublePoint & v1) {
 	auto ac = (v0.x*v1.x + v0.y*v1.y) / sqrt(v0.sqr_len() * v1.sqr_len());
 	ac = (ac > 1) ? 1 : (ac < -1 ? -1 : ac);
 	return acos(ac);
@@ -105,10 +108,10 @@ inline double angle(const Ptd & v0, const Ptd & v1) {
 
 int N;
 const double INF = numeric_limits<double>::max();
-vector<Seg> v;
-vector<Ptd> vert;
+vector<Segment> v;
+vector<DoublePoint> vert;
 vector<vector<int>> g;
-Pt sti[2];
+IntegerPoint sti[2];
 int stnum[2];
 int vert_cnt;
 
@@ -125,20 +128,20 @@ void input() {
 }
 
 void build_graph() {
-	map<Ptd, pair<int, vector<int>>> mp;
+	map<DoublePoint, pair<int, vector<int>>> mp;
 
 	vert_cnt = 0;
 	for (int i = 0; i < N; ++i) {
 		for (int j = i + 1; j < N; ++j) {
-			Ptd isc;
-			if (seg_intersect(v[i], v[j], isc)) {
-				auto it = mp.find(isc);
+			DoublePoint intersection_point;
+			if (seg_intersect(v[i], v[j], intersection_point)) {
+				auto it = mp.find(intersection_point);
 				if (it != mp.end()) {
 					if (it->second.second.front() == i)
 						it->second.second.push_back(j);
 				}
 				else {
-					mp[isc] = { vert_cnt++,{ i, j } };
+					mp[intersection_point] = { vert_cnt++,{ i, j } };
 				}
 			}
 		}
@@ -146,13 +149,13 @@ void build_graph() {
 
 	for (int cntr = 0; cntr < 2; ++cntr) {
 		auto & pi = sti[cntr];
-		Ptd p;
+		DoublePoint p;
 		p.x = pi.x; p.y = pi.y;
 		auto it = mp.find(p);
 		if (it == mp.end()) {
 			stnum[cntr] = vert_cnt;
 			for (int i = 0; i < N; ++i) {
-				if (lies(v[i], pi)) {
+				if (v[i].lies(pi)) {
 					mp[p] = make_pair(vert_cnt++, vector<int>({ i }));
 					break;
 				}
@@ -198,15 +201,15 @@ void dijkstra() {
 		q.pop();
 		if (!used[v.num].insert(v.prev).second)
 			continue;
-		Ptd first_vec = vert[v.num] - vert[v.prev];
+		DoublePoint first_vec = vert[v.num] - vert[v.prev];
 		auto oldw = d[v.num][v.prev];
 		for (auto e : g[v.num]) {
 			if (used[e].find(v.num) != used[e].end())
 				continue;
-			Ptd second_vec = vert[e] - vert[v.num];
+			DoublePoint second_vec = vert[e] - vert[v.num];
 
 			auto it = d[e].insert(make_pair(v.num, INF)).first;
-			auto w = angle(first_vec, second_vec) + oldw;
+			auto w = get_angle(first_vec, second_vec) + oldw;
 			if (it->second > w) {
 				it->second = w;
 				q.push({ w, e, v.num });
