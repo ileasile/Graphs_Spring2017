@@ -18,13 +18,7 @@ struct Point {
 	Point() {
 		x = y = l = 0;
 	}
-	Point(short num) {
-		if (l = num >= N2)
-			num -= N2;
-		x = num / N;
-		y = num % N;
-	}
-	int get_num() {
+	inline int get_num() {
 		return x*N + y + (l ? N2 : 0);
 	}
 	inline bool correct() {
@@ -32,20 +26,18 @@ struct Point {
 	}
 };
 
-struct edge {
+struct Edge {
 	short a, b;
 	char cap, flow;
-	edge(short a, short b, char cap, char flow) :a(a), b(b), cap(cap), flow(flow){}
+	Edge(short a, short b, char cap, char flow) :a(a), b(b), cap(cap), flow(flow){}
 };
 
 vector<Point> sv, tv;
 short n, s, t;
 vector<short> d, ptr;
-queue<short> q;
-vector<edge> e;
+vector<Edge> e;
 map<short, short> sv_rev;
 vector<vector<int>> g;
-
 
 void input() {
 	scanf("%hhd %hd", &N, &K);
@@ -96,7 +88,7 @@ void buid_graph() {
 		}
 	}
 
-	s = 2 * N2;
+	s = N2 << 1;
 	t = s + 1;
 
 	int i = -1;
@@ -111,8 +103,7 @@ void buid_graph() {
 }
 
 bool bfs() {
-	queue<short> empty_queue;
-	swap(q, empty_queue);
+	queue<short> q;
 	q.push(s);
 	d.assign(n, -1);
 	d[s] = 0;
@@ -135,35 +126,31 @@ char dfs(int v) {
 	for (; ptr[v]<(int)g[v].size(); ++ptr[v]) {
 		auto id = g[v][ptr[v]];
 		auto to = e[id].b;
-		if (d[to] != d[v] + 1)  continue;
-		if ((e[id].cap - e[id].flow) && dfs(to)) {
-			++e[id].flow;
-			--e[id ^ 1].flow;
-			return 1;
-		}
+		if (d[to] != d[v] + 1 ||
+			!(e[id].cap - e[id].flow) ||
+			!dfs(to))  continue;
+
+		++e[id].flow;
+		--e[id ^ 1].flow;
+		return 1;
 	}
 	return 0;
 }
 
-short dinic() {
-	short flow = 0;
+void dinic() {
 	for (;;) {
 		if (!bfs())  break;
 		ptr.assign(n, 0);
-		while (dfs(s))
-			++flow;
+		while (dfs(s)) --K;
 	}
-	return flow;
 }
 
 void print_paths() {
-	vector<vector<short>> paths(K);
+	vector<vector<short>> paths(sv.size());
 
 	for (auto & id : g[s]) {
-		auto trg = e[id].b;
-		auto path_num = sv_rev[trg];
-		auto & path = paths[path_num];
-		short cv = trg;
+		short cv = e[id].b;
+		auto & path = paths[sv_rev[cv]];
 		while (cv != t) {
 			if(cv < N2)
 				path.push_back(cv);
@@ -184,26 +171,18 @@ void print_paths() {
 	}
 }
 
-void task() {
-	input();
-	buid_graph();
-	if (dinic() != K)
-		printf("-1");
-	else {
-		print_paths();
-	}
-}
-
 int main() {
-#ifdef ILEASILE
-	auto timer = clock();
-#endif // ILEASILE
 	freopen("input.txt", "r", stdin);
 	freopen("output.txt", "w", stdout);
-	task();
-#ifdef ILEASILE
-	printf("\n\n===============\n%f", (clock() - timer) / (double)CLOCKS_PER_SEC);
-#endif // ILEASILE
+
+	input();
+	buid_graph();
+	dinic();
+	if (K)
+		printf("-1");
+	else
+		print_paths();
+
 	fclose(stdin);
 	fclose(stdout);
 	return 0;
