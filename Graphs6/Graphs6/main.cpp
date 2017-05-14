@@ -130,18 +130,16 @@ bool bfs() {
 	return d[t] != -1;
 }
 
-char dfs(int v, char flow) {
-	if (!flow)  return 0;
-	if (v == t)  return flow;
+char dfs(int v) {
+	if (v == t)  return 1;
 	for (; ptr[v]<(int)g[v].size(); ++ptr[v]) {
 		auto id = g[v][ptr[v]];
 		auto to = e[id].b;
 		if (d[to] != d[v] + 1)  continue;
-		auto pushed = dfs(to, min(flow, char(e[id].cap - e[id].flow)));
-		if (pushed) {
-			e[id].flow += pushed;
-			e[id ^ 1].flow -= pushed;
-			return pushed;
+		if ((e[id].cap - e[id].flow) && dfs(to)) {
+			++e[id].flow;
+			--e[id ^ 1].flow;
+			return 1;
 		}
 	}
 	return 0;
@@ -152,7 +150,7 @@ short dinic() {
 	for (;;) {
 		if (!bfs())  break;
 		ptr.assign(n, 0);
-		while (dfs(s, 1))
+		while (dfs(s))
 			++flow;
 	}
 	return flow;
