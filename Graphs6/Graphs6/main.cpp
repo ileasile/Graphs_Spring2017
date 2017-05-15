@@ -28,8 +28,8 @@ struct Point {
 
 struct Edge {
 	short a, b;
-	char cap, flow;
-	Edge(short a, short b, char cap, char flow) :a(a), b(b), cap(cap), flow(flow){}
+	bool nfilled;
+	Edge(short a, short b, bool nfilled) :a(a), b(b), nfilled(nfilled){}
 };
 
 vector<Point> sv, tv;
@@ -56,9 +56,9 @@ void input() {
 
 void add_edge(short a, short b) {
 	g[a].push_back((int)e.size());
-	e.emplace_back( a, b, 1, 0 );
+	e.emplace_back( a, b, 1 );
 	g[b].push_back((int)e.size());
-	e.emplace_back( b, a, 0, 0 );
+	e.emplace_back( b, a, 0 );
 }
 
 void buid_graph() {
@@ -111,7 +111,7 @@ bool bfs() {
 		q.pop();
 		for (auto id : g[v]) {
 			int to = e[id].b;
-			if (pred[to] == -1 && e[id].flow < e[id].cap) {
+			if (pred[to] == -1 && e[id].nfilled) {
 				q.push(to);
 				pred[to] = id;
 			}
@@ -126,8 +126,8 @@ void increase_flow() {
 	do {
 		id = pred[b];
 		b = e[id].a;
-		++e[id].flow;
-		--e[id ^ 1].flow;
+		e[id].nfilled = 0;
+		e[id ^ 1].nfilled = 1;
 	} while (b != s);
 }
 
@@ -146,7 +146,7 @@ void print_paths() {
 			if(cv < N2)
 				path.push_back(cv);
 			for (auto id : g[cv]) {
-				if (e[id].flow == 1) {
+				if (! e[id].nfilled) {
 					cv = e[id].b;
 					break;
 				}
