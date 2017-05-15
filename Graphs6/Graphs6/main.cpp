@@ -34,7 +34,7 @@ struct Edge {
 
 vector<Point> sv, tv;
 short n, s, t;
-vector<short> d, ptr;
+vector<int> pred;
 vector<Edge> e;
 map<short, short> sv_rev;
 vector<vector<int>> g;
@@ -51,8 +51,7 @@ void input() {
 	N2 = short(N)*N;
 	n = N2 * 2 + 2;
 	g.resize(n);
-	d.resize(n);
-	ptr.resize(n);
+	pred.resize(n);
 }
 
 void add_edge(short a, short b) {
@@ -105,44 +104,36 @@ void buid_graph() {
 bool bfs() {
 	queue<short> q;
 	q.push(s);
-	d.assign(n, -1);
-	d[s] = 0;
-	while (!q.empty() && d[t] == -1) {
+	pred.assign(n, -1);
+	pred[s] = 0;
+	while (!q.empty() && pred[t] == -1) {
 		int v = q.front();
 		q.pop();
 		for (auto id : g[v]) {
 			int to = e[id].b;
-			if (d[to] == -1 && e[id].flow < e[id].cap) {
+			if (pred[to] == -1 && e[id].flow < e[id].cap) {
 				q.push(to);
-				d[to] = d[v] + 1;
+				pred[to] = id;
 			}
 		}
 	}
-	return d[t] != -1;
+	return pred[t] != -1;
 }
 
-char dfs(int v) {
-	if (v == t)  return 1;
-	for (; ptr[v]<(int)g[v].size(); ++ptr[v]) {
-		auto id = g[v][ptr[v]];
-		auto to = e[id].b;
-		if (d[to] != d[v] + 1 ||
-			!(e[id].cap - e[id].flow) ||
-			!dfs(to))  continue;
-
+void increase_flow() {
+	int id;
+	short b = t;
+	do {
+		id = pred[b];
+		b = e[id].a;
 		++e[id].flow;
 		--e[id ^ 1].flow;
-		return 1;
-	}
-	return 0;
+	} while (b != s);
 }
 
-void dinic() {
-	for (;;) {
-		if (!bfs())  break;
-		ptr.assign(n, 0);
-		while (dfs(s)) --K;
-	}
+void edmonds_karp() {
+	for (; bfs(); --K)
+		increase_flow();
 }
 
 void print_paths() {
@@ -177,7 +168,7 @@ int main() {
 
 	input();
 	buid_graph();
-	dinic();
+	edmonds_karp();
 	if (K)
 		printf("-1");
 	else
